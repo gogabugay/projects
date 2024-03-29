@@ -13,16 +13,17 @@ while word.length < 5 || word.length > 12
 end
 
 class NewGame
-  attr_accessor :word, :board, :wrong_letters, :guessed_letters
+  attr_accessor :word, :board, :wrong_letters, :guessed_letters, :word_arr
   def initialize(word)
     @word = word
+    @word_arr = []
     @wrong_letters=[]
     @guessed_letters = []
     @board = Array.new(@word.length, "_")
   end
   #setting an array from the word
   def split_word
-    word_arr = @word.split("")
+    @word_arr = @word.split("")
   end
 
   #method to get player's input
@@ -33,6 +34,8 @@ class NewGame
       if guess == "save"
         save_game
         puts "The game was saved"
+      elsif guess == "load"
+        load_game
       else
         puts "Try again"
       end
@@ -44,7 +47,9 @@ class NewGame
 
   #method to check if player's letter is in the word
   def guess_in_word(guess)
-    @guessed_letters << guess
+    unless @guessed_letters.include?(guess)
+      @guessed_letters << guess
+    end
     if @word.include?(guess)
       puts "The letter is correct!"
       unless @wrong_letters.empty?
@@ -52,7 +57,9 @@ class NewGame
       end
     else
       puts "Sorry, wrong letter"
-      @wrong_letters << guess
+      unless @wrong_letters.include?(guess)
+        @wrong_letters << guess
+      end
       puts "Here are wrong letters: #{@wrong_letters}"
     end
     puts "Here are the letters that you have guessed: #{@guessed_letters}"
@@ -67,8 +74,8 @@ class NewGame
 
 
   #searching for the player's letter in a word and placing in on the board
-  def find_and_place_letter(guess, word_arr)
-    word_arr.each_with_index do |letter, index|
+  def find_and_place_letter(guess)
+    @word_arr.each_with_index do |letter, index|
       if letter == guess
         @board[index] = guess
       end
@@ -79,21 +86,34 @@ class NewGame
   def save_game
     filename = "saved_game_#{Time.now.strftime("%Y-%m-%d %H-%M")}"
     File.open(filename, 'w') do |file|
-      file.puts @word
-      file.puts @board.join(" ")
-      file.puts @wrong_letters.join(" ")
+      file.puts "word #{@word}"
+      file.puts "board #{@board.join("")}"
+      file.puts "wrongs #{@wrong_letters.join("")}"
+      file.puts "guessed #{@guessed_letters.join("")}"
     end
   end
 
   def load_game
     puts "Enter your saved game file name"
     filename = gets.chomp
-    lines = File.readlines(filename, 'w')
-    output = []
-    lines.each do |line|
-      output << line.chomp
+    lines = File.readlines(filename, chomp: true)
+    lines.each_with_index do |line, index|
+      if line.split.first == "word"
+        @word = line.split.last
+        @word_arr = @word.split("")
+      elsif line.split.first == "board"
+        @board = line.split.last.split("")
+      elsif line.split.first == "wrongs"
+        @wrong_letters = line.split.last.split("")
+      elsif line.split.first == "guessed"
+        @guessed_letters = line.split.last.split("")
+      end
     end
-    output
+    puts "The game was loaded"
+    puts "Your board is"
+    puts @board.join(" ")
+    puts "The wrong letters: #{@wrong_letters}"
+    puts "The guessed letter: #{@guessed_letters}"
   end
 end
 
@@ -103,7 +123,10 @@ end
 
 game = NewGame.new(word)
 game.show_board
-word_arr = game.split_word
+game.word_arr = game.split_word
+puts "\nIf you want to load game, enter 'load'"
+
+
 while game.board.count("_") > 0
 
 
@@ -111,7 +134,7 @@ while game.board.count("_") > 0
 
   puts game.guess_in_word(guess)
 
-  game.find_and_place_letter(guess, word_arr)
+  game.find_and_place_letter(guess)
   puts game.board.join(" ")
   # game.save_game
 
@@ -120,4 +143,4 @@ while game.board.count("_") > 0
 end
 
 
-puts "Coungrutalations! Your word is #{word}"
+puts "Coungrutalations! Your word is #{game.word}"
