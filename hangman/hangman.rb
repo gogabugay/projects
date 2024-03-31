@@ -29,7 +29,7 @@ class NewGame
   #method to get player's input
   def player_turn
     puts "Guess the letter"
-    guess = gets.chomp
+    guess = gets.downcase.chomp
     unless guess.length == 1
       if guess == "save"
         save_game
@@ -53,7 +53,7 @@ class NewGame
     if @word.include?(guess)
       puts "The letter is correct!"
       unless @wrong_letters.empty?
-        "Here are wrong letters: #{wrong_letters}"
+        puts "Here are wrong letters: #{@wrong_letters}"
       end
     else
       puts "Sorry, wrong letter"
@@ -61,6 +61,7 @@ class NewGame
         @wrong_letters << guess
       end
       puts "Here are wrong letters: #{@wrong_letters}"
+      puts "You have #{7-@wrong_letters.length} wrong guesses left"
     end
     puts "Here are the letters that you have guessed: #{@guessed_letters}"
   end
@@ -133,14 +134,17 @@ while game.board.count("_") > 0
   guess = game.player_turn
 
   puts game.guess_in_word(guess)
+  if game.wrong_letters.length == 7
+    puts "Sorry, out of guesses, your word was #{game.word}"
+    break
+  end
 
   game.find_and_place_letter(guess)
   puts game.board.join(" ")
-  # game.save_game
 
-  # loaded_game = load_game
-  # p loaded_game
+  if game.board.count("_") == 0
+    puts "Coungrutalations! Your word is #{game.word}"
+  end
+
+
 end
-
-
-puts "Coungrutalations! Your word is #{game.word}"
